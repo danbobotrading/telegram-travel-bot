@@ -1,146 +1,127 @@
-const TelegramBot = require('node-telegram-bot-api');
-const express = require('express');
-const config = require('./config/config');
+#!/usr/bin/env node
+'use strict';
+
+require('dotenv').config();
+const TravelBot = require('./src/telegram/bot');
 const logger = require('./src/utils/logger');
-const { initializeDatabase } = require('./src/database/models');
-const { initializeRedis } = require('./src/database/redis-client');
-const botCommands = require('./src/telegram/commands');
-const routeEngine = require('./src/core/route-stitcher');
 
-class TravelBot {
-    constructor() {
-        this.app = express();
-        this.bot = null;
-        this.port = config.port || 3000;
+/**
+ * Telegram Travel Bot - Main Entry Point
+ * Advanced flight search with virtual interlining for African routes
+ */
+
+class Application {
+  constructor() {
+    this.bot = null;
+    this.shuttingDown = false;
+  }
+
+  async start() {
+    try {
+      logger.info('🚀 Starting Telegram Travel Bot...');
+      logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
+      // Handle uncaught exceptions
+      this.setupErrorHandlers();
+
+      // Initialize and start the bot
+      this.bot = new TravelBot();
+      await this.bot.initialize();
+
+      logger.info('✅ Travel Bot started successfully');
+      logger.info('🤖 Bot is now listening for messages...');
+
+      // Graceful shutdown handler
+      this.setupGracefulShutdown();
+
+    } catch (error) {
+      logger.error('❌ Failed to start Travel Bot:', error);
+      process.exit(1);
     }
+  }
 
-    async initialize() {
-        try {
-            logger.info('Initializing Travel Bot...');
-            
-            // 1. Initialize services
-            await this.initializeServices();
-            
-            // 2. Setup Telegram bot
-            this.setupTelegramBot();
-            
-            // 3. Setup Express server for webhooks
-            this.setupExpress();
-            
-            // 4. Start cron jobs
-            this.startCronJobs();
-            
-            logger.info('Travel Bot initialized successfully!');
-            
-        } catch (error) {
-            logger.error('Failed to initialize bot:', error);
-            process.exit(1);
-        }
-    }
-
-    async initializeServices() {
-        // Initialize database
-        await initializeDatabase();
-        logger.info('Database initialized');
-        
-        // Initialize Redis
-        await initializeRedis();
-        logger.info('Redis initialized');
-        
-        // Test API connections
-        await this.testAPIConnections();
-    }
-
-    async testAPIConnections() {
-        const apis = ['kiwi', 'travelpayouts', 'skyscanner'];
-        for (const api of apis) {
-            try {
-                // Test each API (implement in respective API files)
-                logger.info(`Testing ${api} API connection...`);
-                // Add actual test calls here
-            } catch (error) {
-                logger.warn(`Could not connect to ${api} API:`, error.message);
-            }
-        }
-    }
-
-    setupTelegramBot() {
-        // Use webhook in production, polling in development
-        if (config.nodeEnv === 'production' && config.telegram.webhookUrl) {
-            this.bot = new TelegramBot(config.telegram.token);
-            this.bot.setWebHook(`${config.telegram.webhookUrl}/bot${config.telegram.token}`);
-            logger.info('Webhook mode enabled');
-        } else {
-            this.bot = new TelegramBot(config.telegram.token, { polling: true });
-            logger.info('Polling mode enabled');
-        }
-
-        // Setup command handlers
-        botCommands.setup(this.bot);
-    }
-
-    setupExpress() {
-        // Middleware
-        this.app.use(express.json());
-        
-        // Webhook endpoint for Telegram
-        this.app.post(`/webhook/${config.telegram.token}`, (req, res) => {
-            this.bot.processUpdate(req.body);
-            res.sendStatus(200);
-        });
-
-        // Health check endpoint
-        this.app.get('/health', (req, res) => {
-            res.json({ 
-                status: 'ok', 
-                timestamp: new Date().toISOString(),
-                service: 'telegram-travel-bot'
-            });
-        });
-
-        // Search endpoint (for future web interface)
-        this.app.post('/api/search', async (req, res) => {
-            try {
-                const { from, to, date, returnDate, passengers } = req.body;
-                const results = await routeEngine.findCheapestRoutes(from, to, date, returnDate, passengers);
-                res.json(results);
-            } catch (error) {
-                logger.error('Search error:', error);
-                res.status(500).json({ error: 'Search failed' });
-            }
-        });
-
-        // Start server
-        this.app.listen(this.port, () => {
-            logger.info(`Server running on port ${this.port}`);
-        });
-    }
-
-    startCronJobs() {
-        // Update exchange rates every hour
-        const { CronJob } = require('cron');
-        
-        // Exchange rate updates
-        new CronJob('0 * * * *', async () => {
-            logger.info('Updating exchange rates...');
-            // Implement exchange rate update
-        }, null, true, 'Africa/Johannesburg');
-
-        // Cache warmup for popular African routes
-        new CronJob('0 4 * * *', async () => {
-            logger.info('Running cache warmup...');
-            // Implement cache warmup
-        }, null, true, 'Africa/Johannesburg');
-    }
-}
-
-// Start the bot
-if (require.main === module) {
-    const bot = new TravelBot();
-    bot.initialize().catch(error => {
-        logger.error('Fatal error:', error);
-        process.exit(1);
+  setupErrorHandlers() {
+    // Uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      logger.error('💥 UNCAUGHT EXCEPTION:', error);
+      if (!this.shuttingDown) {
+        this.shutdown(1);
+      }
     });
+
+    // Unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('⚠️ UNHANDLED REJECTION at:', promise, 'reason:', reason);
+    });
+
+    // SIGTERM signal
+    process.on('SIGTERM', () => {
+      logger.info('📩 Received SIGTERM signal');
+      this.shutdown(0);
+    });
+
+    // SIGINT signal (Ctrl+C)
+    process.on('SIGINT', () => {
+      logger.info('📩 Received SIGINT signal');
+      this.shutdown(0);
+    });
+  }
+
+  setupGracefulShutdown() {
+    // Graceful shutdown function
+    const gracefulShutdown = async (signal) => {
+      if (this.shuttingDown) return;
+      
+      this.shuttingDown = true;
+      logger.info(`🛑 Received ${signal}. Starting graceful shutdown...`);
+
+      try {
+        // Shutdown bot
+        if (this.bot) {
+          await this.bot.shutdown();
+        }
+
+        logger.info('✅ Graceful shutdown completed');
+        process.exit(0);
+      } catch (error) {
+        logger.error('❌ Error during shutdown:', error);
+        process.exit(1);
+      }
+    };
+
+    // Attach signal handlers
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  }
+
+  async shutdown(exitCode = 0) {
+    this.shuttingDown = true;
+    logger.info('🔴 Shutting down Travel Bot...');
+
+    try {
+      if (this.bot) {
+        await this.bot.shutdown();
+      }
+
+      // Close database connections, etc.
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      logger.info('👋 Shutdown completed');
+      process.exit(exitCode);
+    } catch (error) {
+      logger.error('Error during shutdown:', error);
+      process.exit(1);
+    }
+  }
 }
 
-module.exports = TravelBot;
+// Start the application
+if (require.main === module) {
+  const app = new Application();
+  app.start().catch(error => {
+    logger.error('Fatal error during startup:', error);
+    process.exit(1);
+  });
+}
+
+module.exports = Application;

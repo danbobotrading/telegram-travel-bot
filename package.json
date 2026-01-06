@@ -1,0 +1,45 @@
+{
+  "name": "telegram-travel-bot",
+  "version": "1.0.0",
+  "description": "Advanced Telegram bot for finding cheapest African travel routes with virtual interlining",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "migrate": "node scripts/migrate.js",
+    "migrate:create": "node scripts/migrate.js create",
+    "cache-warmup": "node scripts/cache-warmup.js",
+    "update-rates": "node scripts/exchange-rate-updater.js",
+    "docker:build": "docker build -t telegram-travel-bot .",
+    "docker:run": "docker-compose up",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up"
+  },
+  "keywords": ["telegram", "travel", "flights", "africa", "virtual-interlining"],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.64.0",
+    "axios": "^1.6.0",
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.13",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "moment": "^2.29.4",
+    "cron": "^3.1.6",
+    "joi": "^17.11.0",
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.1",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3",
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

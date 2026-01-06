@@ -1,1 +1,41 @@
-
+{
+  "name": "telegram-travel-bot",
+  "version": "1.0.0",
+  "description": "Advanced Telegram bot for finding cheapest African travel routes with virtual interlining",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "migrate": "node scripts/migrate.js",
+    "cache-warmup": "node scripts/cache-warmup.js"
+  },
+  "keywords": [
+    "telegram",
+    "travel",
+    "flights",
+    "africa",
+    "virtual-interlining",
+    "kiwi-api"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.61.0",
+    "axios": "^1.6.0",
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "redis": "^4.6.11",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "moment": "^2.29.4",
+    "cron": "^3.1.6",
+    "cheerio": "^1.0.0-rc.12",
+    "joi": "^17.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
+  }
+}

@@ -1,0 +1,97 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Redis database
+dump.rdb
+
+# SQLite database
+*.db
+*.sqlite
+
+# Docker
+docker-data/
+*.dockerignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Test outputs
+test-results/
+jest-*.json
+
+# Build outputs
+dist/
+build/
+out/
+
+# Documentation
+docs/_build/
+
+# Secrets
+secrets/
+config/production.json
+config/staging.json
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+
+# Database backups
+*.bak
+*.backup
+
+# Docker Compose
+docker-compose.override.yml
+
+# Local development
+.elasticbeanstalk/
+.ebextensions/

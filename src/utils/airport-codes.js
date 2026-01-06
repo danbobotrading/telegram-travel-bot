@@ -285,4 +285,169 @@ class AirportUtils {
     const timezones = {
       // South Africa
       'JNB': 'Africa/Johannesburg',
-     
+      'CPT': 'Africa/Johannesburg',
+      'DUR': 'Africa/Johannesburg',
+      
+      // Nigeria
+      'LOS': 'Africa/Lagos',
+      'ABV': 'Africa/Lagos',
+      
+      // Kenya
+      'NBO': 'Africa/Nairobi',
+      
+      // Ethiopia
+      'ADD': 'Africa/Addis_Ababa',
+      
+      // Egypt
+      'CAI': 'Africa/Cairo',
+      
+      // Ghana
+      'ACC': 'Africa/Accra',
+      
+      // UAE
+      'DXB': 'Asia/Dubai',
+      'AUH': 'Asia/Dubai',
+      
+      // Qatar
+      'DOH': 'Asia/Qatar',
+      
+      // UK
+      'LHR': 'Europe/London',
+      
+      // France
+      'CDG': 'Europe/Paris',
+      
+      // Netherlands
+      'AMS': 'Europe/Amsterdam',
+      
+      // Germany
+      'FRA': 'Europe/Berlin',
+      
+      // Turkey
+      'IST': 'Europe/Istanbul',
+      
+      // USA
+      'JFK': 'America/New_York',
+      'LAX': 'America/Los_Angeles',
+    };
+    
+    return timezones[code] || 'UTC';
+  }
+
+  /**
+   * Get popular routes from an airport
+   */
+  static getPopularRoutesFrom(code, limit = 10) {
+    const popularRoutes = {
+      // From Johannesburg
+      'JNB': ['CPT', 'DUR', 'HRE', 'LUN', 'VFA', 'LAD', 'MPM', 'GBE', 'WDH', 'ADD', 'NBO', 'LOS', 'ACC', 'DXB', 'LHR'],
+      // From Cape Town
+      'CPT': ['JNB', 'DUR', 'HRE', 'LUN', 'VFA', 'GBE', 'WDH', 'ADD', 'NBO', 'DXB', 'LHR', 'AMS'],
+      // From Lagos
+      'LOS': ['ABV', 'ACC', 'DKR', 'BJL', 'ROB', 'FNA', 'LFW', 'NBO', 'ADD', 'CAI', 'DXB', 'LHR', 'CDG', 'JFK'],
+      // From Nairobi
+      'NBO': ['MBA', 'JRO', 'DAR', 'KGL', 'EBB', 'ADD', 'JNB', 'LOS', 'ACC', 'CAI', 'DXB', 'DOH', 'LHR', 'AMS', 'IST'],
+      // From Addis Ababa
+      'ADD': ['NBO', 'DAR', 'KGL', 'EBB', 'JNB', 'LOS', 'ACC', 'CAI', 'DXB', 'DOH', 'LHR', 'CDG', 'FRA', 'IST', 'JFK'],
+      // From Cairo
+      'CAI': ['HRG', 'LXR', 'JNB', 'NBO', 'ADD', 'LOS', 'ACC', 'DXB', 'DOH', 'RUH', 'JED', 'LHR', 'CDG', 'FRA', 'IST', 'JFK'],
+      // From Accra
+      'ACC': ['LOS', 'ABV', 'DKR', 'BJL', 'ROB', 'FNA', 'NBO', 'ADD', 'CAI', 'DXB', 'LHR', 'CDG', 'AMS', 'JFK', 'IAD'],
+      // From Dubai
+      'DXB': ['JNB', 'CPT', 'NBO', 'ADD', 'CAI', 'ACC', 'LOS', 'DOH', 'RUH', 'JED', 'IST', 'LHR', 'CDG', 'AMS', 'FRA', 'JFK', 'BKK', 'SIN'],
+      // From London
+      'LHR': ['JNB', 'CPT', 'LOS', 'ACC', 'NBO', 'ADD', 'CAI', 'DXB', 'DOH', 'AMS', 'CDG', 'FRA', 'JFK', 'ORD', 'LAX'],
+      // From New York
+      'JFK': ['LHR', 'CDG', 'AMS', 'FRA', 'IST', 'DXB', 'DOH', 'ACC', 'LOS', 'JNB', 'CPT'],
+    };
+    
+    return popularRoutes[code] || [];
+  }
+
+  /**
+   * Check if two airports are in the same country
+   */
+  static areSameCountry(code1, code2) {
+    const airport1 = this.getAirport(code1);
+    const airport2 = this.getAirport(code2);
+    
+    if (!airport1 || !airport2) return false;
+    return airport1.country === airport2.country;
+  }
+
+  /**
+   * Get distance between two airports
+   */
+  static getDistanceBetween(code1, code2) {
+    const airport1 = this.getAirport(code1);
+    const airport2 = this.getAirport(code2);
+    
+    if (!airport1 || !airport2) return null;
+    
+    return this.calculateDistance(
+      airport1.latitude, airport1.longitude,
+      airport2.latitude, airport2.longitude
+    );
+  }
+
+  /**
+   * Estimate flight time between airports (in minutes)
+   */
+  static estimateFlightTime(code1, code2) {
+    const distance = this.getDistanceBetween(code1, code2);
+    if (!distance) return null;
+    
+    // Average speed: 900 km/h (including takeoff/landing)
+    const hours = distance / 900;
+    const minutes = Math.round(hours * 60);
+    
+    // Add buffer for taxiing, etc.
+    return minutes + 30;
+  }
+
+  /**
+   * Get all airport codes
+   */
+  static getAllAirportCodes() {
+    return Object.keys(allAirports);
+  }
+
+  /**
+   * Search airports by name or city
+   */
+  static searchAirports(query, limit = 10) {
+    if (!query || query.length < 2) return [];
+    
+    const searchTerm = query.toLowerCase();
+    const results = [];
+    
+    for (const [code, airport] of Object.entries(allAirports)) {
+      if (
+        code.toLowerCase().includes(searchTerm) ||
+        airport.city.toLowerCase().includes(searchTerm) ||
+        airport.name.toLowerCase().includes(searchTerm)
+      ) {
+        results.push({
+          code,
+          name: airport.name,
+          city: airport.city,
+          country: airport.country,
+          hub: airport.hub,
+        });
+        
+        if (results.length >= limit) break;
+      }
+    }
+    
+    return results;
+  }
+}
+
+module.exports = {
+  airports: allAirports,
+  africanAirports,
+  middleEasternHubs,
+  europeanHubs,
+  majorAirports,
+  AirportUtils,
+};

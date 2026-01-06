@@ -6,9 +6,19 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "lint": "eslint src/**/*.js",
+    "lint:fix": "eslint src/**/*.js --fix",
     "migrate": "node scripts/migrate.js",
-    "cache-warmup": "node scripts/cache-warmup.js"
+    "migrate:create": "node scripts/migrate.js create",
+    "cache-warmup": "node scripts/cache-warmup.js",
+    "update-rates": "node scripts/exchange-rate-updater.js",
+    "docker:build": "docker build -t telegram-travel-bot .",
+    "docker:run": "docker-compose up",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up -d"
   },
   "keywords": [
     "telegram",
@@ -16,26 +26,55 @@
     "flights",
     "africa",
     "virtual-interlining",
-    "kiwi-api"
+    "kiwi-api",
+    "travelpayouts",
+    "skyscanner"
   ],
-  "author": "Your Name",
+  "author": "Travel Scout Team",
   "license": "MIT",
   "dependencies": {
-    "node-telegram-bot-api": "^0.61.0",
-    "axios": "^1.6.0",
+    "node-telegram-bot-api": "^0.64.0",
+    "axios": "^1.6.8",
     "express": "^4.18.2",
     "pg": "^8.11.3",
-    "redis": "^4.6.11",
+    "redis": "^4.6.13",
     "dotenv": "^16.3.1",
     "winston": "^3.11.0",
     "moment": "^2.29.4",
     "cron": "^3.1.6",
-    "cheerio": "^1.0.0-rc.12",
-    "joi": "^17.11.0"
+    "joi": "^17.11.0",
+    "lodash": "^4.17.21",
+    "uuid": "^9.0.1",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "compression": "^1.7.4",
+    "rate-limiter-flexible": "^3.1.2",
+    "node-cache": "^5.1.2",
+    "pino": "^8.17.0",
+    "pino-pretty": "^10.2.3",
+    "cheerio": "^1.0.-rc.12",
+    "iata-codes": "^1.1.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.0.3",
     "jest": "^29.7.0",
-    "supertest": "^6.3.3"
-  }
+    "supertest": "^6.3.4",
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "jest-mock-redis": "^1.0.2",
+    "pg-mem": "^2.10.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/telegram-travel-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/telegram-travel-bot/issues"
+  },
+  "homepage": "https://github.com/yourusername/telegram-travel-bot#readme"
 }
